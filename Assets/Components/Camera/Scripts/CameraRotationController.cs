@@ -28,7 +28,7 @@ namespace Components.Camera.Scripts
 
         void Update()
         {
-            var direction = _cameraRotationActionRef.action.ReadValue<Vector2>();
+            Vector2 direction = _cameraRotationActionRef.action.ReadValue<Vector2>();
             
             _xRotation += direction.x * _rotationSpeed * Time.deltaTime;
             _yRotation += direction.y * _rotationSpeed * Time.deltaTime;

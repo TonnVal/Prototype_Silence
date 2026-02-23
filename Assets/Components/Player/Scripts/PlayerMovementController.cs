@@ -15,7 +15,8 @@ namespace Components.Player.Scripts
         
         [Header("Components")]
         [SerializeField] private Animator _animator;
-        [SerializeField] private GameObject _characterGameObject;
+        [SerializeField] private Transform _characterGameObject;
+        [SerializeField] private Transform _playerCamera;
         
         private const string WALK_PARAMETER = "IsWalking";
 
@@ -34,19 +35,31 @@ namespace Components.Player.Scripts
         /// </summary>
         void Update()
         {
-            // Read inputs.
+            // Read movement inputs.
             Vector2 movementInput = _playerMoveActionRef.action.ReadValue<Vector2>();
             Vector3 movement = new Vector3(movementInput.x, 0, movementInput.y);
+            
+            // Read camera inputs.
+            Vector3 cameraForward = _playerCamera.forward;
+            Vector3 cameraRight = _playerCamera.right;
+            cameraForward.y = 0;
+            cameraRight.y = 0;
+            
+            // Current camera direction.
+            Vector3 currentForward = movementInput.y * cameraForward;
+            Vector3 currentRight = movementInput.x * cameraRight;
+            
+            Vector3 currentDirection = currentForward + currentRight;
 
-            transform.Translate(movement * (_playerSpeed * Time.deltaTime), Space.World);
+            transform.Translate(currentDirection * (_playerSpeed * Time.deltaTime));
             
             if (movement != Vector3.zero)
             {
                 _animator.SetBool(WALK_PARAMETER, true);
                 
                 // Rotate character only.
-                Quaternion playerRotation = Quaternion.LookRotation(movement, Vector3.up);
-                _characterGameObject.transform.rotation = Quaternion.RotateTowards(transform.rotation, playerRotation, _playerRotationSpeed);
+                Quaternion playerRotation = Quaternion.LookRotation(currentDirection, Vector3.up);
+                _characterGameObject.rotation = Quaternion.RotateTowards(transform.rotation, playerRotation, _playerRotationSpeed);
             }
             else
             {
