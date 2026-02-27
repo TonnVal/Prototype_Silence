@@ -9,6 +9,7 @@ namespace Components.Player.Scripts
         [Header("Movement Input Actions")] 
         [SerializeField] private InputActionReference _playerMoveActionRef;
         [SerializeField] private InputActionReference _playerRunActionRef;
+        [SerializeField] private InputActionReference _playerJumpActionRef;
         
         [Header("Movement Settings")]
         [SerializeField] private float _playerWalkSpeed = 2f;
@@ -21,30 +22,49 @@ namespace Components.Player.Scripts
         [SerializeField] private Transform _characterGameObject;
         [SerializeField] private Transform _playerCamera;
         
+        [Header("Debug")]
+        [SerializeField] private bool _isRunning;
+        
         private const string WALK_PARAMETER = "IsWalking";
         private const string RUN_PARAMETER = "IsRunning";
+        private const string RUN_TRIGGER = "TriggerRun";
+        private const string JUMP_TRIGGER = "TriggerJump";
 
         private void OnEnable()
         {
             _playerMoveActionRef.action.Enable();
             _playerRunActionRef.action.Enable();
+            _playerJumpActionRef.action.Enable();
         }
 
         private void OnDisable()
         {
             _playerMoveActionRef.action.Disable();
             _playerRunActionRef.action.Disable();
+            _playerJumpActionRef.action.Disable();
         }
 
         private void Start()
         {
             _playerCurrentSpeed = _playerWalkSpeed;
+            _isRunning = false;
+        }
+        
+        void Update()
+        {
+            _isRunning = _playerRunActionRef.action.IsPressed();
+            HandlePlayerMove();
+            
+            if (_playerJumpActionRef.action.WasPerformedThisFrame())
+            {
+                _animator.SetTrigger(JUMP_TRIGGER);
+            }
         }
 
         /// <summary>
         /// Handle player movement and rotation.
         /// </summary>
-        void Update()
+        private void HandlePlayerMove()
         {
             // Read movement inputs.
             Vector2 movementInput = _playerMoveActionRef.action.ReadValue<Vector2>();
@@ -68,13 +88,15 @@ namespace Components.Player.Scripts
             {
                 _animator.SetBool(WALK_PARAMETER, true);
                 
-                if (_playerRunActionRef.action.WasPerformedThisFrame())
+                if (_isRunning)
                 {
+                    _animator.SetTrigger(RUN_TRIGGER);
                     _animator.SetBool(RUN_PARAMETER, true);
                     _playerCurrentSpeed = _playerRunSpeed;
                 }
-                else if (_playerRunActionRef.action.WasReleasedThisFrame())
+                else if (!_isRunning)
                 {
+                    _animator.ResetTrigger(RUN_TRIGGER);
                     _animator.SetBool(RUN_PARAMETER, false);
                     _playerCurrentSpeed = _playerWalkSpeed;
                 }
@@ -86,6 +108,8 @@ namespace Components.Player.Scripts
             else
             {
                 _animator.SetBool(WALK_PARAMETER, false);
+                _animator.SetBool(RUN_PARAMETER, false);
+                _animator.ResetTrigger(RUN_TRIGGER);
             }
         }
     }

@@ -636,12 +636,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementController
   _playerMoveActionRef: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _playerRunActionRef: {fileID: -7471211009204490832, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  _playerJumpActionRef: {fileID: -2099379676528639254, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _playerWalkSpeed: 2
   _playerRunSpeed: 7
   _playerRotationSpeed: 720
   _animator: {fileID: 1384928144}
   _characterGameObject: {fileID: 1384928143}
   _playerCamera: {fileID: 726017694}
+  _isRunning: 0
 --- !u!143 &1806788090
 CharacterController:
   m_ObjectHideFlags: 0
