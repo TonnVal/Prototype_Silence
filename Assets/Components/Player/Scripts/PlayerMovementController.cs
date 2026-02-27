@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,6 +18,13 @@ namespace Components.Player.Scripts
         [SerializeField] private float _playerRotationSpeed = 720f;
         private float _playerCurrentSpeed;
         
+        [Header("Jump Settings")]
+        [SerializeField] private float _jumpTimer;
+        [SerializeField] private float _jumpDuration = 1f;
+        [SerializeField] private float _jumpHeight = 1.5f;
+        [SerializeField] private AnimationCurve _jumpCurve;
+        [SerializeField] private AnimationCurve _fallCurve;
+        
         [Header("Components")]
         [SerializeField] private Animator _animator;
         [SerializeField] private Transform _characterGameObject;
@@ -24,11 +32,11 @@ namespace Components.Player.Scripts
         
         [Header("Debug")]
         [SerializeField] private bool _isRunning;
+        [SerializeField] private bool _isJumping;
         
         private const string WALK_PARAMETER = "IsWalking";
         private const string RUN_PARAMETER = "IsRunning";
-        private const string RUN_TRIGGER = "TriggerRun";
-        private const string JUMP_TRIGGER = "TriggerJump";
+        private const string JUMP_PARAMETER = "IsJumping";
 
         private void OnEnable()
         {
@@ -55,9 +63,9 @@ namespace Components.Player.Scripts
             _isRunning = _playerRunActionRef.action.IsPressed();
             HandlePlayerMove();
             
-            if (_playerJumpActionRef.action.WasPerformedThisFrame())
+            if (_playerJumpActionRef.action.WasPerformedThisFrame() && !_isJumping)
             {
-                _animator.SetTrigger(JUMP_TRIGGER);
+                HandlePlayerJump();
             }
         }
 
@@ -90,13 +98,11 @@ namespace Components.Player.Scripts
                 
                 if (_isRunning)
                 {
-                    _animator.SetTrigger(RUN_TRIGGER);
                     _animator.SetBool(RUN_PARAMETER, true);
                     _playerCurrentSpeed = _playerRunSpeed;
                 }
                 else if (!_isRunning)
                 {
-                    _animator.ResetTrigger(RUN_TRIGGER);
                     _animator.SetBool(RUN_PARAMETER, false);
                     _playerCurrentSpeed = _playerWalkSpeed;
                 }
@@ -109,8 +115,60 @@ namespace Components.Player.Scripts
             {
                 _animator.SetBool(WALK_PARAMETER, false);
                 _animator.SetBool(RUN_PARAMETER, false);
-                _animator.ResetTrigger(RUN_TRIGGER);
             }
+        }
+
+        private void HandlePlayerJump()
+        {
+            if (_isJumping)
+            {
+                return;
+            }
+
+            StartCoroutine(Coroutine_PlayerJump());
+        }
+
+        private IEnumerator Coroutine_PlayerJump()
+        {
+            _isJumping = true;
+            _animator.SetBool(JUMP_PARAMETER, true);
+            
+            float jumpHalfDuration = _jumpDuration / 2;
+            _jumpTimer = 0f;
+            
+            // Jump logic
+            while (_jumpTimer < jumpHalfDuration)
+            {
+                _jumpTimer += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(_jumpTimer / jumpHalfDuration);
+    
+                var targetHeight = _jumpCurve.Evaluate(normalizedTime) * _jumpHeight;
+    
+                var targetPosition = new Vector3(transform.position.x, targetHeight, transform.position.z);
+                transform.position = targetPosition;
+    
+                // Wait for the next frame.
+                yield return null;
+            }
+
+            // Fall logic
+            _jumpTimer = 0f;
+
+            while (_jumpTimer < jumpHalfDuration)
+            {
+                _jumpTimer += Time.deltaTime;
+                var normalizedTime = Mathf.Clamp01(_jumpTimer / jumpHalfDuration);
+    
+                var targetHeight = _fallCurve.Evaluate(normalizedTime) * _jumpHeight;
+    
+                var targetPosition = new Vector3(transform.position.x, targetHeight, transform.position.z);
+                transform.position = targetPosition;
+    
+                yield return null;
+            }
+            
+            _animator.SetBool(JUMP_PARAMETER, false);
+            _isJumping = false;
         }
     }
 }
