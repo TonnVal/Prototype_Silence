@@ -456,7 +456,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 202363439}
         m_TargetAssemblyTypeName: Components.UIMenuController.Scripts.UIMenuController,
           Assembly-CSharp
         m_MethodName: QuitGame
