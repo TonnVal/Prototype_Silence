@@ -27,8 +27,8 @@ namespace Components.Player.Scripts
         [SerializeField] private Transform _playerCamera;
         
         [Header("Debug")]
-        [SerializeField] private bool _isRunning;
         [SerializeField] private bool _isJumping;
+        [SerializeField] private bool _isSprinting;
 
         private InputAction _playerMoveActionRef;
         private InputAction _playerSprintActionRef;
@@ -58,11 +58,19 @@ namespace Components.Player.Scripts
         private void Start()
         {
             _playerCurrentSpeed = _playerWalkSpeed;
-            _isRunning = false;
         }
         
         void Update()
         {
+            if (_playerSprintActionRef.WasPressedThisFrame())
+            {
+                _isSprinting = true;
+            }
+            else if (_playerSprintActionRef.WasReleasedThisFrame())
+            {
+                _isSprinting = false;
+            }
+            
             HandlePlayerMove();
             
             if (_playerJumpActionRef.WasPerformedThisFrame() && !_isJumping)
@@ -98,12 +106,12 @@ namespace Components.Player.Scripts
             {
                 _animator.SetBool(WALK_PARAMETER, true);
                 
-                if (_playerSprintActionRef.WasPressedThisFrame())
+                if (_isSprinting)
                 {
                     _animator.SetBool(SPRINT_PARAMETER, true);
                     _playerCurrentSpeed = _playerSprintSpeed;
                 }
-                else if (_playerSprintActionRef.WasReleasedThisFrame())
+                else if (!_isSprinting)
                 {
                     _animator.SetBool(SPRINT_PARAMETER, false);
                     _playerCurrentSpeed = _playerWalkSpeed;
