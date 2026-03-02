@@ -7,14 +7,9 @@ namespace Components.Player.Scripts
 
     public class PlayerMovementController : MonoBehaviour
     {
-        [Header("Movement Input Actions")] 
-        [SerializeField] private InputActionReference _playerMoveActionRef;
-        [SerializeField] private InputActionReference _playerRunActionRef;
-        [SerializeField] private InputActionReference _playerJumpActionRef;
-        
         [Header("Movement Settings")]
         [SerializeField] private float _playerWalkSpeed = 2f;
-        [SerializeField] private float _playerRunSpeed = 7f;
+        [SerializeField] private float _playerSprintSpeed = 7f;
         [SerializeField] private float _playerRotationSpeed = 720f;
         private float _playerCurrentSpeed;
         
@@ -26,6 +21,7 @@ namespace Components.Player.Scripts
         [SerializeField] private AnimationCurve _fallCurve;
         
         [Header("Components")]
+        [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private Animator _animator;
         [SerializeField] private Transform _characterGameObject;
         [SerializeField] private Transform _playerCamera;
@@ -33,23 +29,30 @@ namespace Components.Player.Scripts
         [Header("Debug")]
         [SerializeField] private bool _isRunning;
         [SerializeField] private bool _isJumping;
+
+        private InputAction _playerMoveActionRef;
+        private InputAction _playerSprintActionRef;
+        private InputAction _playerJumpActionRef;
         
         private const string WALK_PARAMETER = "IsWalking";
-        private const string RUN_PARAMETER = "IsRunning";
+        private const string SPRINT_PARAMETER = "IsSprinting";
         private const string JUMP_PARAMETER = "IsJumping";
 
         private void OnEnable()
         {
-            _playerMoveActionRef.action.Enable();
-            _playerRunActionRef.action.Enable();
-            _playerJumpActionRef.action.Enable();
+            _inputActions.FindActionMap("Player").Enable();
         }
 
         private void OnDisable()
         {
-            _playerMoveActionRef.action.Disable();
-            _playerRunActionRef.action.Disable();
-            _playerJumpActionRef.action.Disable();
+            _inputActions.FindActionMap("Player").Disable();
+        }
+
+        private void Awake()
+        {
+            _playerMoveActionRef = InputSystem.actions.FindAction("Move");
+            _playerSprintActionRef = InputSystem.actions.FindAction("Sprint");
+            _playerJumpActionRef = InputSystem.actions.FindAction("Jump");
         }
 
         private void Start()
@@ -60,10 +63,9 @@ namespace Components.Player.Scripts
         
         void Update()
         {
-            _isRunning = _playerRunActionRef.action.IsPressed();
             HandlePlayerMove();
             
-            if (_playerJumpActionRef.action.WasPerformedThisFrame() && !_isJumping)
+            if (_playerJumpActionRef.WasPerformedThisFrame() && !_isJumping)
             {
                 HandlePlayerJump();
             }
@@ -75,7 +77,7 @@ namespace Components.Player.Scripts
         private void HandlePlayerMove()
         {
             // Read movement inputs.
-            Vector2 movementInput = _playerMoveActionRef.action.ReadValue<Vector2>();
+            Vector2 movementInput = _playerMoveActionRef.ReadValue<Vector2>();
             Vector3 movement = new Vector3(movementInput.x, 0, movementInput.y);
             
             // Read camera inputs.
@@ -96,14 +98,14 @@ namespace Components.Player.Scripts
             {
                 _animator.SetBool(WALK_PARAMETER, true);
                 
-                if (_isRunning)
+                if (_playerSprintActionRef.WasPressedThisFrame())
                 {
-                    _animator.SetBool(RUN_PARAMETER, true);
-                    _playerCurrentSpeed = _playerRunSpeed;
+                    _animator.SetBool(SPRINT_PARAMETER, true);
+                    _playerCurrentSpeed = _playerSprintSpeed;
                 }
-                else if (!_isRunning)
+                else if (_playerSprintActionRef.WasReleasedThisFrame())
                 {
-                    _animator.SetBool(RUN_PARAMETER, false);
+                    _animator.SetBool(SPRINT_PARAMETER, false);
                     _playerCurrentSpeed = _playerWalkSpeed;
                 }
                 
@@ -114,7 +116,7 @@ namespace Components.Player.Scripts
             else
             {
                 _animator.SetBool(WALK_PARAMETER, false);
-                _animator.SetBool(RUN_PARAMETER, false);
+                _animator.SetBool(SPRINT_PARAMETER, false);
             }
         }
 

@@ -5,10 +5,8 @@ namespace Components.UIMenuController.Scripts
 {
     public class UIMenuController : MonoBehaviour
     {
-        [Header("Menu Inputs")] 
-        [SerializeField] private InputActionAsset _inputActions;
-        
         [Header("Menu Components")]
+        [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private GameObject _menu;
 
         private InputAction _playerMenuActionRef;
