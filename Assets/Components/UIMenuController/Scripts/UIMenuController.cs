@@ -1,3 +1,4 @@
+using Components.SceneLoader.Scripts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -51,11 +52,7 @@ namespace Components.UIMenuController.Scripts
 
         public void QuitGame()
         {
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-            #else
-            Application.Quit();
-            #endif
+            SceneLoaderService.LoadMainMenu();
         }
     }
 }
